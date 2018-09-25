@@ -7,7 +7,7 @@ Docker image for ROS Indigo with Fetch Gazebo and VNC access.
 
 Simply run
 ```bash
-docker pull -t varunagrawal/ros-indigo-fetch-vnc:latest .
+docker pull -t varunagrawal/ros-indigo-fetch-vnc:latest
 ```
 
 The image should have everything you need to run the Fetch robot in Gazebo.
