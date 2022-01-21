@@ -1,51 +1,40 @@
-FROM osrf/ros:indigo-desktop-full
+FROM varunagrawal/ros-indigo-fetch-vnc:latest
 
-ENV DEBIAN_FRONTEND noninteractive
+# Baxter workstation setup - https://sdk.rethinkrobotics.com/wiki/Workstation_Setup
 
-# built-in packages
+# Surce ROS and build
+# RUN source /opt/ros/indigo/setup.bash
+# WORKDIR /home/ubuntu/ros_ws
+# RUN catkin_make && catkin_make install
+
+# Install Baxter SDK dependencies
+RUN apt-get update && apt-get install wget
+
+RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu trusty main" > /etc/apt/sources.list.d/ros-latest.list'
+RUN wget https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O - | sudo apt-key add -
+
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends software-properties-common curl \
-    && add-apt-repository ppa:fcwu-tw/ppa \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends --allow-unauthenticated \
-        supervisor \
-        openssh-server pwgen sudo vim-tiny emacs24 \
-        net-tools \
-        lxde x11vnc xvfb \
-        gtk2-engines-murrine ttf-ubuntu-font-family \
-        nginx \
-        python-pip python-dev build-essential \
-        mesa-utils libgl1-mesa-dri \
-        gnome-themes-standard gtk2-engines-pixbuf gtk2-engines-murrine pinta \
-        dbus-x11 x11-utils \
-        terminator \
-    && apt-get autoclean \
-    && apt-get autoremove \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y git-core python-argparse python-wstool python-vcstools python-rosdep ros-indigo-control-msgs ros-indigo-joystick-drivers
 
-# Install aptitude to install fetch-gazebo-demo
-RUN apt-get update && \
-    apt-get install -y aptitude
-RUN printf 'n\nY\nY\n' | aptitude install ros-indigo-fetch-gazebo-demo
+# Install Baxter SDK
+WORKDIR /root/ros_ws/src
+RUN wstool init . \
+    && wstool merge https://raw.githubusercontent.com/RethinkRobotics/baxter/master/baxter_sdk.rosinstall \
+    && wstool update
+# RUN source /opt/ros/indigo/setup.bash
+# WORKDIR /home/ubuntu/ros_ws
+# RUN catkin_make && catkin_make install
 
-RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /root/.bashrc
+# Install Baxter Simulator
+RUN apt-get install -y ros-indigo-baxter-simulator
 
-# tini for subreap
-ENV TINI_VERSION v0.9.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /bin/tini
-RUN chmod +x /bin/tini
+# Install Baxter Simulator dependencies
+RUN apt-get update \
+    && apt-get install -y gazebo2 ros-indigo-qt-build ros-indigo-driver-common ros-indigo-gazebo-ros-control ros-indigo-gazebo-ros-pkgs ros-indigo-ros-control ros-indigo-control-toolbox ros-indigo-realtime-tools ros-indigo-ros-controllers ros-indigo-xacro python-wstool ros-indigo-tf-conversions ros-indigo-kdl-parser
 
-# setup environment
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
+# Download baxter.sh script
+WORKDIR /root/ros_ws
+RUN wget https://github.com/RethinkRobotics/baxter/raw/master/baxter.sh
+RUN chmod u+x baxter.sh
 
-ADD image /
-RUN pip install setuptools wheel && pip install -r /usr/lib/web/requirements.txt
-
-RUN cp /usr/share/applications/terminator.desktop /root/Desktop
-
-EXPOSE 80
-WORKDIR /root
-ENV HOME=/home/ubuntu \
-    SHELL=/bin/bash
 ENTRYPOINT ["/startup.sh"]
