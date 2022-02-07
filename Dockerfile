@@ -32,6 +32,10 @@ RUN apt-get install -y ros-indigo-baxter-simulator
 RUN apt-get update \
     && apt-get install -y gazebo2 ros-indigo-qt-build ros-indigo-driver-common ros-indigo-gazebo-ros-control ros-indigo-gazebo-ros-pkgs ros-indigo-ros-control ros-indigo-control-toolbox ros-indigo-realtime-tools ros-indigo-ros-controllers ros-indigo-xacro python-wstool ros-indigo-tf-conversions ros-indigo-kdl-parser
 
+# Install MoveIt and Baxter MoveIt config
+RUN apt-get update \
+    && apt-get install -y ros-indigo-moveit-full ros-indigo-baxter-moveit-config
+
 # Download baxter.sh script
 WORKDIR /root/ros_ws
 RUN wget https://github.com/RethinkRobotics/baxter/raw/master/baxter.sh
